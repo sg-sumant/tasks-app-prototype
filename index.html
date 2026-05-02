@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Utsav Kids — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Sans:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #FFF8F2;
+    --surface:   #FFFFFF;
+    --orange:    #F47B20;
+    --orange-lt: #FFF0E0;
+    --orange-dk: #B85500;
+    --rose:      #C8274A;
+    --teal:      #00897B;
+    --text:      #1C1108;
+    --muted:     #7A614E;
+    --border:    #EDE0D4;
+    --shadow:    rgba(244,123,32,.13);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E8DDD5;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    padding: 24px 16px;
+  }
+
+  /* ─── Phone Shell ─── */
+  .phone {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 32px 80px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+
+  /* ─── Screen System ─── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(24px);
+    transition: opacity .28s ease, transform .28s ease;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: none;
+  }
+  .screen.slide-out {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 22px;
+    line-height: 1;
+    vertical-align: middle;
+    user-select: none;
+  }
+
+  /* ─── Reusable Components ─── */
+  .btn-primary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: linear-gradient(135deg, var(--orange), var(--rose));
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    padding: 16px 24px;
+    font: 600 17px/1 'DM Sans', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 0 6px 20px var(--shadow);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-primary:active { transform: scale(.97); box-shadow: 0 2px 8px var(--shadow); }
+
+  .btn-outline {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 13px 16px;
+    font: 500 14px/1 'DM Sans', sans-serif;
+    cursor: pointer;
+    flex: 1;
+    transition: background .15s;
+  }
+  .btn-outline:active { background: var(--orange-lt); }
+
+  .input-wrap {
+    position: relative;
+    display: flex; align-items: center;
+  }
+  .input-wrap .material-symbols-outlined {
+    position: absolute; left: 14px; color: var(--muted); font-size: 20px;
+  }
+  .input-wrap input {
+    width: 100%;
+    padding: 14px 14px 14px 44px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    font: 400 15px/1.4 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s;
+  }
+  .input-wrap input:focus { border-color: var(--orange); }
+  .input-wrap input::placeholder { color: var(--muted); }
+
+  /* ─── Bottom Nav ─── */
+  .bottom-nav {
+    position: sticky; bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 10px 8px 24px;
+    z-index: 10;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: background .15s;
+    background: none; border: none;
+  }
+  .nav-item .material-symbols-outlined { font-size: 22px; color: var(--muted); }
+  .nav-item span.label { font: 500 10px/1 'DM Sans'; color: var(--muted); letter-spacing: .4px; text-transform: uppercase; }
+  .nav-item.active { background: var(--orange-lt); }
+  .nav-item.active .material-symbols-outlined { color: var(--orange); font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .nav-item.active span.label { color: var(--orange); }
+
+  /* ─── TOP APP BAR ─── */
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 12px;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--rose));
+    display: flex; align-items: center; justify-content: center;
+    font: 700 14px 'Fraunces'; color: #fff;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .brand-name { font: 700 18px 'Fraunces'; color: var(--orange); }
+  .coin-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--orange-lt); border: 1px solid #F5C99A;
+    border-radius: 100px; padding: 6px 12px;
+    font: 600 14px 'DM Sans'; color: var(--orange-dk);
+  }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--surface);
+    border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* ─── Chip / Tag ─── */
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--orange-lt); border-radius: 100px;
+    padding: 4px 10px 4px 6px;
+    font: 600 12px 'DM Sans'; color: var(--orange-dk);
+  }
+
+  /* ─── Progress bar ─── */
+  .prog-track { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+
+  /* ─── Star badge ─── */
+  .star-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #FFF8E0; border: 1px solid #F5D97A;
+    border-radius: 100px; padding: 4px 10px;
+    font: 600 12px 'DM Sans'; color: #9A6F00;
+  }
+
+  /* ─── Task Card ─── */
+  .task-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 16px;
+    border: 1.5px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .task-card .left-accent {
+    width: 3px; border-radius: 2px; align-self: stretch;
+    flex-shrink: 0;
+  }
+  .task-done-btn {
+    background: var(--orange); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 8px 16px; font: 600 13px 'DM Sans';
+    cursor: pointer; transition: background .15s, transform .15s;
+  }
+  .task-done-btn:active { transform: scale(.95); }
+  .task-done-btn.done { background: var(--teal); }
+
+  /* ─── Stat Cards ─── */
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+  }
+  .stat-card .icon-ring {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+  }
+  .stat-card .val { font: 700 24px 'Fraunces'; color: var(--text); }
+  .stat-card .lbl { font: 500 11px 'DM Sans'; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
+
+  /* ─── Child Row ─── */
+  .child-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: border-color .2s;
+    margin-bottom: 10px;
+  }
+  .child-card:active { border-color: var(--orange); }
+  .child-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 2.5px solid var(--orange); overflow: hidden; flex-shrink: 0;
+    background: linear-gradient(135deg,#FFE4C0,#FFC8E0);
+    display: flex; align-items: center; justify-content: center;
+    font: 700 22px 'Fraunces'; color: var(--orange);
+  }
+
+  /* ─── Calendar Strip ─── */
+  .cal-strip { display: flex; gap: 6px; }
+  .cal-day {
+    flex: 1; text-align: center; padding: 8px 4px;
+    border-radius: 12px; cursor: pointer;
+  }
+  .cal-day .d-name { font: 500 10px 'DM Sans'; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .cal-day .d-num { font: 600 16px 'Fraunces'; color: var(--text); margin-top: 4px; }
+  .cal-day.today { background: var(--text); }
+  .cal-day.today .d-name, .cal-day.today .d-num { color: #fff; }
+
+  /* ─── Section Title ─── */
+  .section-title {
+    font: 600 18px 'Fraunces'; color: var(--text);
+    margin-bottom: 14px;
+  }
+  .section-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .link-sm { font: 500 13px 'DM Sans'; color: var(--orange); background: none; border: none; cursor: pointer; }
+
+  /* ─── Marigold dots ─── */
+  .marigold-row { display: flex; gap: 8px; }
+  .mgold { font: 500 20px 'DM Sans'; }
+
+  /* ─── Divider ─── */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    font: 600 11px 'DM Sans'; color: var(--muted); letter-spacing: 1px;
+    text-transform: uppercase; margin: 4px 0;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ─── Quick action chips ─── */
+  .qa-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 18px; padding: 18px 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: border-color .2s, background .2s;
+    flex: 1;
+  }
+  .qa-card:active { border-color: var(--orange); background: var(--orange-lt); }
+  .qa-card .qicon {
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .qa-card span { font: 500 12px 'DM Sans'; color: var(--text); text-align: center; }
+
+  /* ─── Passcode dots ─── */
+  .passcode-row { display: flex; gap: 16px; justify-content: center; margin: 24px 0; }
+  .pc-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--orange);
+  }
+  .pc-dot.filled { background: var(--orange); }
+
+  /* ─── Numpad ─── */
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .num-key {
+    height: 62px; border-radius: 18px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    font: 600 22px 'Fraunces'; color: var(--text);
+    cursor: pointer; transition: background .12s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .num-key:active { background: var(--orange-lt); }
+  .num-key.del { font-size: 18px; }
+  .num-key.confirm { background: var(--orange); color: #fff; border-color: var(--orange); font-size: 20px; }
+
+  /* ─── Hero video placeholder ─── */
+  .hero-video {
+    width: 100%; aspect-ratio: 16/9;
+    border-radius: 24px; overflow: hidden;
+    position: relative; background: #1A0A00;
+  }
+  .hero-video img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+  .play-btn {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .play-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--rose));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(244,123,32,.4);
+  }
+
+  /* ─── Reward card ─── */
+  .reward-card {
+    background: linear-gradient(135deg, var(--orange-lt), #FFF0F4);
+    border: 1.5px solid #F5C99A;
+    border-radius: 20px; padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 12px;
+  }
+  .reward-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ─── Scroll content ─── */
+  .scroll-content { padding: 0 20px 20px; }
+
+  /* ─── Level badge ─── */
+  .level-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--orange); color: #fff;
+    border-radius: 100px; padding: 4px 12px;
+    font: 600 11px 'DM Sans'; letter-spacing: .4px;
+  }
+
+  /* ─── Profile Hero ─── */
+  .profile-hero {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 20px 0;
+    text-align: center;
+  }
+  .profile-avatar {
+    width: 88px; height: 88px; border-radius: 50%;
+    border: 3px solid var(--orange);
+    overflow: hidden; background: #FFE4C0;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 36px 'Fraunces'; color: var(--orange);
+    margin-bottom: 10px;
+  }
+
+  /* ─── Tab bar ─── */
+  .tab-bar {
+    display: flex; gap: 4px;
+    background: var(--border); border-radius: 14px; padding: 4px;
+    margin: 14px 0 20px;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 9px 0;
+    border-radius: 10px; cursor: pointer;
+    font: 500 13px 'DM Sans'; color: var(--muted);
+    transition: background .15s;
+    background: none; border: none;
+  }
+  .tab.active { background: var(--surface); color: var(--text); font-weight: 600; }
+
+  /* ─── Onboarding ─── */
+  .ob-screen { padding: 0 20px; }
+  .ob-info-box {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 20px; margin: 20px 0;
+    text-align: center;
+  }
+
+  /* floating bottom cta */
+  .bottom-cta {
+    position: sticky; bottom: 0; padding: 16px 20px 28px;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+  }
+
+  /* ─── Sign in screen ─── */
+  .signin-logo {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--rose));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 24px var(--shadow);
+  }
+  .signin-card {
+    background: var(--surface); border-radius: 28px;
+    padding: 24px; border: 1.5px solid var(--border);
+    box-shadow: 0 4px 24px var(--shadow);
+    margin-bottom: 24px;
+  }
+  .forgot-link { font: 500 13px 'DM Sans'; color: var(--rose); background: none; border: none; cursor: pointer; }
+
+  /* ─── Decorative marigolds (footer) ─── */
+  .petal-row {
+    display: flex; justify-content: space-around; align-items: flex-end;
+    padding: 8px 0 0; opacity: .35;
+  }
+  .petal { font-size: 28px; }
+
+  /* ─── Transition helpers ─── */
+  .fade-in { animation: fadeUp .4s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ─── Scrollbar ─── */
+  .screen::-webkit-scrollbar { width: 0; }
+
+  /* ─── Toast ─── */
+  .toast {
+    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff;
+    border-radius: 100px; padding: 10px 20px;
+    font: 500 13px 'DM Sans';
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+    white-space: nowrap; z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+
+  <!-- ════════════════════════════════════════
+       SCREEN 1 — Parent Sign-In
+  ════════════════════════════════════════ -->
+  <div class="screen active" id="s-signin">
+    <div style="padding: 48px 24px 16px; text-align:center;">
+      <div class="signin-logo">
+        <span class="material-symbols-outlined" style="color:#fff;font-size:32px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">auto_stories</span>
+      </div>
+      <h1 style="font:700 30px 'Fraunces';color:var(--orange-dk);line-height:1.2;margin-bottom:6px;">Welcome Back,<br>Parent!</h1>
+      <p style="font:400 14px 'DM Sans';color:var(--muted);">Continue nurturing your child's habits.</p>
+    </div>
+
+    <div style="padding: 0 24px;">
+      <div class="signin-card">
+        <!-- Social buttons -->
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <button class="btn-outline" onclick="showToast('Google login')">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google
+          </button>
+          <button class="btn-outline" onclick="showToast('Apple login')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 3.99zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Apple
+          </button>
+        </div>
+
+        <div class="divider">or continue with email</div>
+
+        <div style="margin-top:18px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label style="font:500 12px 'DM Sans';color:var(--muted);display:block;margin-bottom:6px;letter-spacing:.3px;">EMAIL ADDRESS</label>
+            <div class="input-wrap">
+              <span class="material-symbols-outlined">mail</span>
+              <input type="email" placeholder="name@example.com"/>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <label style="font:500 12px 'DM Sans';color:var(--muted);letter-spacing:.3px;">PASSWORD</label>
+              <button class="forgot-link">Forgot?</button>
+            </div>
+            <div class="input-wrap">
+              <span class="material-symbols-outlined">lock</span>
+              <input type="password" placeholder="••••••••"/>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="navigateTo('s-dashboard')" style="margin-top:4px;">
+            Sign In <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      <p style="text-align:center;font:400 14px 'DM Sans';color:var(--muted);">
+        New to Utsav Kids? <button onclick="showToast('Registration coming soon')" style="background:none;border:none;cursor:pointer;font:700 14px 'DM Sans';color:var(--rose);">Create Account</button>
+      </p>
+
+      <p style="text-align:center;font:500 11px 'DM Sans';color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:12px;">✦ A Festive Way to Grow ✦</p>
+    </div>
+
+    <div class="petal-row" style="padding:20px 0 32px;">
+      <span class="petal">🌼</span>
+      <span class="petal" style="font-size:22px;">🌸</span>
+      <span class="petal">🌼</span>
+      <span class="petal" style="font-size:34px;">🌼</span>
+      <span class="petal" style="font-size:22px;">🌸</span>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════
+       SCREEN 2 — Parent Dashboard
+  ════════════════════════════════════════ -->
+  <div class="screen" id="s-dashboard">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="brand">
+        <div class="avatar" style="background:linear-gradient(135deg,#F47B20,#C8274A);">A</div>
+        <span class="brand-name">Utsav Kids</span>
+      </div>
+      <div class="icon-btn" onclick="showToast('Settings')">
+        <span class="material-symbols-outlined" style="font-size:20px;color:var(--muted);">settings</span>
+      </div>
+    </div>
+
+    <div class="scroll-content">
+      <!-- Greeting -->
+      <h1 style="font:700 26px 'Fraunces';color:var(--orange-dk);margin-bottom:4px;">Namaste, Aditi! 👋</h1>
+      <p style="font:400 14px 'DM Sans';color:var(--muted);margin-bottom:20px;">Ready to see your little heroes shine today?</p>
+
+      <!-- Stat row -->
+      <div class="stat-row" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="icon-ring" style="background:var(--orange-lt);">
+            <span class="material-symbols-outlined" style="color:var(--orange);font-size:18px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">auto_awesome</span>
+          </div>
+          <div class="val">1,240</div>
+          <div class="lbl">Family Stars</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon-ring" style="background:#F0F8FF;">
+            <span class="material-symbols-outlined" style="color:var(--rose);font-size:18px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">military_tech</span>
+          </div>
+          <div class="val" style="color:var(--rose);">8/12</div>
+          <div class="lbl">Tasks Today</div>
+        </div>
+      </div>
+
+      <!-- Children section -->
+      <div class="section-row">
+        <span class="section-title" style="margin-bottom:0;">Active Heroes</span>
+        <button class="link-sm" onclick="showToast('All children')">View All</button>
+      </div>
+
+      <!-- Arjun -->
+      <div class="child-card" onclick="navigateTo('s-child-arjun')">
+        <div class="child-avatar">🧑</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div>
+              <span style="font:600 15px 'Fraunces';color:var(--text);">Arjun</span>
+              <span style="font:400 12px 'DM Sans';color:var(--muted);margin-left:6px;">8 yrs</span>
+            </div>
+            <div class="star-badge">⭐ 450</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span style="font:500 10px 'DM Sans';color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Daily</span>
+            <span style="font:600 12px 'DM Sans';color:var(--orange);">75%</span>
+          </div>
+          <div class="prog-track">
+            <div class="prog-fill" style="width:75%;background:linear-gradient(90deg,var(--orange),#F5A623);"></div>
+          </div>
+        </div>
+        <span class="material-symbols-outlined" style="color:var(--muted);font-size:18px;">chevron_right</span>
+      </div>
+
+      <!-- Zara -->
+      <div class="child-card" onclick="showToast('Zara\'s profile coming soon')">
+        <div class="child-avatar" style="font-size:20px;">👧</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div>
+              <span style="font:600 15px 'Fraunces';color:var(--text);">Zara</span>
+              <span style="font:400 12px 'DM Sans';color:var(--muted);margin-left:6px;">5 yrs</span>
+            </div>
+            <div class="star-badge">⭐ 320</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span style="font:500 10px 'DM Sans';color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Daily</span>
+            <span style="font:600 12px 'DM Sans';color:var(--rose);">40%</span>
+          </div>
+          <div class="prog-track">
+            <div class="prog-fill" style="width:40%;background:linear-gradient(90deg,var(--rose),#E87090);"></div>
+          </div>
+        </div>
+        <span class="material-symbols-outlined" style="color:var(--muted);font-size:18px;">chevron_right</span>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="section-title" style="margin-top:6px;">Quick Actions</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <div class="qa-card" onclick="showToast('New task added')">
+          <div class="qicon" style="background:#E8F8F5;">
+            <span class="material-symbols-outlined" style="color:var(--teal);">task_alt</span>
+          </div>
+          <span>New Task</span>
+        </div>
+        <div class="qa-card" onclick="showToast('Reward Shop')">
+          <div class="qicon" style="background:#FFF0F4;">
+            <span class="material-symbols-outlined" style="color:var(--rose);">redeem</span>
+          </div>
+          <span>Reward Shop</span>
+        </div>
+        <div class="qa-card" onclick="showToast('Child added')">
+          <div class="qicon" style="background:var(--orange-lt);">
+            <span class="material-symbols-outlined" style="color:var(--orange);">person_add</span>
+          </div>
+          <span>Add Child</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="navSwitch(this,'s-dashboard')">
+        <span class="material-symbols-outlined">grid_view</span>
+        <span class="label">Dashboard</span>
+      </button>
+      <button class="nav-item" onclick="navSwitch(this,'s-dashboard')">
+        <span class="material-symbols-outlined">group</span>
+        <span class="label">Children</span>
+      </button>
+      <button class="nav-item" onclick="navSwitch(this,'s-dashboard')">
+        <span class="material-symbols-outlined">history</span>
+        <span class="label">History</span>
+      </button>
+      <button class="nav-item" onclick="navSwitch(this,'s-dashboard')">
+        <span class="material-symbols-outlined">tune</span>
+        <span class="label">Settings</span>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════
+       SCREEN 3 — Child Profile (Arjun)
+  ════════════════════════════════════════ -->
+  <div class="screen" id="s-child-arjun">
+    <!-- Back top bar -->
+    <div class="top-bar">
+      <button onclick="navigateTo('s-dashboard')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font:500 14px 'DM Sans';color:var(--muted);">
+        <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+        Back
+      </button>
+      <div class="icon-btn" onclick="showToast('Edit profile')">
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--muted);">edit</span>
+      </div>
+    </div>
+
+    <!-- Profile hero -->
+    <div class="profile-hero">
+      <div class="profile-avatar">🧑</div>
+      <div class="level-badge">⚡ Level 12</div>
+      <h2 style="font:700 26px 'Fraunces';color:var(--text);margin-top:8px;">Arjun</h2>
+      <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+        <span style="color:#F5B800;font-size:14px;">★★★★</span><span style="color:var(--border);font-size:14px;">★</span>
+        <span style="font:400 12px 'DM Sans';color:var(--muted);margin-left:4px;">4.8 Parent Rating</span>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar" style="width:100%;">
+        <button class="tab active" onclick="switchTab(this,'tab-tasks')">Tasks</button>
+        <button class="tab" onclick="switchTab(this,'tab-rewards')">Rewards</button>
+        <button class="tab" onclick="switchTab(this,'tab-earned')">Earned</button>
+      </div>
+    </div>
+
+    <!-- Tab: Tasks -->
+    <div id="tab-tasks" class="scroll-content">
+      <!-- Calendar strip -->
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:16px;margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font:600 16px 'Fraunces';">October 2024</span>
+          <button class="link-sm" onclick="showToast('Calendar expanded')">Expand ↓</button>
+        </div>
+        <div class="cal-strip">
+          <div class="cal-day"><div class="d-name">Mon</div><div class="d-num">21</div></div>
+          <div class="cal-day"><div class="d-name">Tue</div><div class="d-num">22</div></div>
+          <div class="cal-day today"><div class="d-name">Wed</div><div class="d-num">23</div></div>
+          <div class="cal-day"><div class="d-name">Thu</div><div class="d-num">24</div></div>
+          <div class="cal-day"><div class="d-name">Fri</div><div class="d-num">25</div></div>
+        </div>
+      </div>
+
+      <!-- Task 1 -->
+      <div class="task-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:#E8F8F5;display:flex;align-items:center;justify-content:center;">
+              <span class="material-symbols-outlined" style="color:var(--teal);font-size:18px;">draw</span>
+            </div>
+            <div>
+              <div class="chip" style="margin-bottom:2px;">FESTIVE</div>
+            </div>
+          </div>
+          <button class="task-done-btn" onclick="markDone(this)">Done</button>
+        </div>
+        <div style="font:600 15px 'Fraunces';color:var(--text);margin-bottom:4px;">Help Grandma with Rangoli</div>
+        <div style="font:400 13px 'DM Sans';color:var(--muted);margin-bottom:10px;">Artistic task: Creating the floral patterns in the hallway.</div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:14px;">🪙</span>
+          <span style="font:600 13px 'DM Sans';color:var(--orange);">+50 Coins</span>
+        </div>
+      </div>
+
+      <!-- Task 2 -->
+      <div class="task-card" style="border-left:3px solid var(--rose);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:#FFF0F4;display:flex;align-items:center;justify-content:center;">
+              <span class="material-symbols-outlined" style="color:var(--rose);font-size:18px;">menu_book</span>
+            </div>
+            <div class="chip" style="background:#FFF0F4;color:var(--rose);">ACADEMICS</div>
+          </div>
+          <button class="task-done-btn" style="background:var(--rose);" onclick="markDone(this)">Done</button>
+        </div>
+        <div style="font:600 15px 'Fraunces';color:var(--text);margin-bottom:4px;">Finish Math Homework</div>
+        <div style="font:400 13px 'DM Sans';color:var(--muted);margin-bottom:10px;">Chapter 5: Geometry exercises and practice problems.</div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:14px;">🪙</span>
+          <span style="font:600 13px 'DM Sans';color:var(--orange);">+30 Coins</span>
+        </div>
+      </div>
+
+      <!-- Task 3 -->
+      <div class="task-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:var(--orange-lt);display:flex;align-items:center;justify-content:center;">
+              <span class="material-symbols-outlined" style="color:var(--orange);font-size:18px;">cleaning_services</span>
+            </div>
+          </div>
+          <button class="task-done-btn" onclick="markDone(this)">Done</button>
+        </div>
+        <div style="font:600 15px 'Fraunces';color:var(--text);margin-bottom:4px;">Organize the Toy Chest</div>
+        <div style="font:400 13px 'DM Sans';color:var(--muted);margin-bottom:10px;">Sorting blocks and books before the guests arrive for dinner.</div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:14px;">🪙</span>
+          <span style="font:600 13px 'DM Sans';color:var(--orange);">+20 Coins</span>
+        </div>
+      </div>
+
+      <!-- Weekly goal -->
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:18px;margin-top:4px;margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font:600 15px 'Fraunces';">Weekly Goal</span>
+          <span style="font:600 13px 'DM Sans';color:var(--orange);">4 / 7 Marigolds</span>
+        </div>
+        <div class="marigold-row">
+          <span class="mgold">🌼</span><span class="mgold">🌼</span><span class="mgold">🌼</span><span class="mgold">🌼</span>
+          <span class="mgold" style="opacity:.25;">🌼</span><span class="mgold" style="opacity:.25;">🌼</span><span class="mgold" style="opacity:.25;">🌼</span>
+        </div>
+        <p style="font:400 12px 'DM Sans';color:var(--muted);margin-top:10px;text-align:center;">3 more marigolds to unlock the Sunday Treat! 🎉</p>
+      </div>
+    </div>
+
+    <!-- Tab: Rewards (hidden) -->
+    <div id="tab-rewards" class="scroll-content" style="display:none;">
+      <div class="reward-card">
+        <div class="reward-icon"><span style="font-size:24px;">🎮</span></div>
+        <div>
+          <div style="font:600 14px 'Fraunces';color:var(--text);">30 Min Screen Time</div>
+          <div style="font:400 12px 'DM Sans';color:var(--muted);">Costs 100 coins</div>
+        </div>
+        <button class="task-done-btn" style="margin-left:auto;" onclick="showToast('Reward unlocked!')">Unlock</button>
+      </div>
+      <div class="reward-card">
+        <div class="reward-icon"><span style="font-size:24px;">🍫</span></div>
+        <div>
+          <div style="font:600 14px 'Fraunces';color:var(--text);">Chocolate Treat</div>
+          <div style="font:400 12px 'DM Sans';color:var(--muted);">Costs 80 coins</div>
+        </div>
+        <button class="task-done-btn" style="margin-left:auto;" onclick="showToast('Reward unlocked!')">Unlock</button>
+      </div>
+      <div class="reward-card">
+        <div class="reward-icon"><span style="font-size:24px;">📚</span></div>
+        <div>
+          <div style="font:600 14px 'Fraunces';color:var(--text);">New Story Book</div>
+          <div style="font:400 12px 'DM Sans';color:var(--muted);">Costs 200 coins</div>
+        </div>
+        <button class="task-done-btn" style="margin-left:auto;" onclick="showToast('Reward unlocked!')">Unlock</button>
+      </div>
+    </div>
+
+    <!-- Tab: Earned (hidden) -->
+    <div id="tab-earned" class="scroll-content" style="display:none;">
+      <div style="text-align:center;padding:40px 20px;">
+        <span style="font-size:48px;">🏆</span>
+        <p style="font:600 18px 'Fraunces';color:var(--text);margin-top:12px;">450 Stars Earned!</p>
+        <p style="font:400 13px 'DM Sans';color:var(--muted);margin-top:6px;">Arjun has completed 28 tasks this month.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;">
+          <div class="stat-card" style="text-align:center;">
+            <div class="val" style="font-size:28px;">28</div>
+            <div class="lbl">Tasks Done</div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div class="val" style="font-size:28px;color:var(--orange);">450</div>
+            <div class="lbl">Stars</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="navigateTo('s-dashboard')">
+        <span class="material-symbols-outlined">grid_view</span>
+        <span class="label">Dashboard</span>
+      </button>
+      <button class="nav-item active">
+        <span class="material-symbols-outlined">group</span>
+        <span class="label">Children</span>
+      </button>
+      <button class="nav-item" onclick="showToast('History')">
+        <span class="material-symbols-outlined">history</span>
+        <span class="label">History</span>
+      </button>
+      <button class="nav-item" onclick="showToast('Settings')">
+        <span class="material-symbols-outlined">tune</span>
+        <span class="label">Settings</span>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════
+       SCREEN 4 — Child App Welcome
+  ════════════════════════════════════════ -->
+  <div class="screen" id="s-child-welcome">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="brand">
+        <div class="avatar" style="background:linear-gradient(135deg,#F47B20,#C8274A);">
+          <span style="font-size:16px;">🧑</span>
+        </div>
+        <span class="brand-name">Utsav</span>
+      </div>
+      <div class="coin-badge">540 🪙</div>
+    </div>
+
+    <div class="ob-screen">
+      <!-- Hero video -->
+      <div class="hero-video">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#1A0A00 0%,#6B2800 50%,#F47B20 100%);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:64px;opacity:.6;">🌻</span>
+        </div>
+        <div class="play-btn">
+          <div class="play-circle" onclick="showToast('Video playing...')">
+            <span class="material-symbols-outlined" style="color:#fff;font-size:28px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;translate:2px 0;">play_arrow</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Greeting -->
+      <p style="text-align:center;font:600 18px 'Fraunces';color:var(--orange-dk);margin-top:20px;">Namaste, Hero! 🙏</p>
+
+      <!-- Info card -->
+      <div class="ob-info-box">
+        <p style="font:400 15px 'DM Sans';color:var(--muted);">Ready to start your adventure?</p>
+        <p style="font:600 15px 'Fraunces';color:var(--rose);margin-top:8px;">Ask your parent for your unique<br>hero passcode in their dashboard.</p>
+      </div>
+
+      <!-- Hint cards -->
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:18px;text-align:center;">
+          <span class="material-symbols-outlined" style="color:var(--orange);font-size:28px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">verified_user</span>
+          <div style="font:600 11px 'DM Sans';color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:8px;">Stay Safe</div>
+        </div>
+        <div style="flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:18px;text-align:center;">
+          <span class="material-symbols-outlined" style="color:var(--orange);font-size:28px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">auto_awesome</span>
+          <div style="font:600 11px 'DM Sans';color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:8px;">Earn Coins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="bottom-cta">
+      <button class="btn-primary" onclick="navigateTo('s-child-login')">
+        Continue to Login
+        <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+      </button>
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--orange);"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════
+       SCREEN 5 — Child Login (Passcode)
+  ════════════════════════════════════════ -->
+  <div class="screen" id="s-child-login">
+    <div class="top-bar">
+      <button onclick="navigateTo('s-child-welcome')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font:500 14px 'DM Sans';color:var(--muted);">
+        <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+        Back
+      </button>
+    </div>
+
+    <div style="padding:16px 24px;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--orange-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <span class="material-symbols-outlined" style="color:var(--orange);font-size:32px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">shield_person</span>
+      </div>
+      <h2 style="font:700 24px 'Fraunces';color:var(--text);">Enter Hero Passcode</h2>
+      <p style="font:400 13px 'DM Sans';color:var(--muted);margin-top:6px;">Ask your parent for your 4-digit code</p>
+
+      <!-- Dots -->
+      <div class="passcode-row" id="pc-dots">
+        <div class="pc-dot" id="pc-0"></div>
+        <div class="pc-dot" id="pc-1"></div>
+        <div class="pc-dot" id="pc-2"></div>
+        <div class="pc-dot" id="pc-3"></div>
+      </div>
+
+      <!-- Numpad -->
+      <div class="numpad" id="numpad">
+        <button class="num-key" onclick="pcInput('1')">1</button>
+        <button class="num-key" onclick="pcInput('2')">2</button>
+        <button class="num-key" onclick="pcInput('3')">3</button>
+        <button class="num-key" onclick="pcInput('4')">4</button>
+        <button class="num-key" onclick="pcInput('5')">5</button>
+        <button class="num-key" onclick="pcInput('6')">6</button>
+        <button class="num-key" onclick="pcInput('7')">7</button>
+        <button class="num-key" onclick="pcInput('8')">8</button>
+        <button class="num-key" onclick="pcInput('9')">9</button>
+        <button class="num-key del" onclick="pcDelete()">
+          <span class="material-symbols-outlined" style="font-size:20px;">backspace</span>
+        </button>
+        <button class="num-key" onclick="pcInput('0')">0</button>
+        <button class="num-key confirm" onclick="pcConfirm()">
+          <span class="material-symbols-outlined" style="font-size:22px;color:#fff;">check</span>
+        </button>
+      </div>
+
+      <p style="font:400 12px 'DM Sans';color:var(--muted);margin-top:20px;">Try passcode: <strong>1234</strong></p>
+    </div>
+  </div>
+
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div><!-- end phone -->
+
+
+<!-- ─── Navigation overlay buttons (outside phone) ─── -->
+<div style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:200;">
+  <button onclick="navigateTo('s-signin')"      style="background:rgba(255,255,255,.9);border:1.5px solid #E0D0C0;border-radius:100px;padding:8px 14px;font:500 11px 'DM Sans';cursor:pointer;color:#554336;backdrop-filter:blur(8px);">Sign-In</button>
+  <button onclick="navigateTo('s-dashboard')"   style="background:rgba(255,255,255,.9);border:1.5px solid #E0D0C0;border-radius:100px;padding:8px 14px;font:500 11px 'DM Sans';cursor:pointer;color:#554336;backdrop-filter:blur(8px);">Dashboard</button>
+  <button onclick="navigateTo('s-child-arjun')" style="background:rgba(255,255,255,.9);border:1.5px solid #E0D0C0;border-radius:100px;padding:8px 14px;font:500 11px 'DM Sans';cursor:pointer;color:#554336;backdrop-filter:blur(8px);">Child Profile</button>
+  <button onclick="navigateTo('s-child-welcome')" style="background:rgba(255,255,255,.9);border:1.5px solid #E0D0C0;border-radius:100px;padding:8px 14px;font:500 11px 'DM Sans';cursor:pointer;color:#554336;backdrop-filter:blur(8px);">Kids App</button>
+</div>
+
+<script>
+  // ─── Screen navigation ───
+  let current = 's-signin';
+  function navigateTo(id) {
+    const prev = document.getElementById(current);
+    const next = document.getElementById(id);
+    if (!next || id === current) return;
+    prev.classList.add('slide-out');
+    setTimeout(() => {
+      prev.classList.remove('active', 'slide-out');
+      next.classList.add('active');
+      next.scrollTop = 0;
+      current = id;
+    }, 120);
+  }
+
+  // ─── Nav switch ───
+  function navSwitch(btn, screen) {
+    document.querySelectorAll('#s-dashboard .nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    navigateTo(screen);
+  }
+
+  // ─── Tab switch ───
+  function switchTab(btn, tabId) {
+    const bar = btn.closest('.tab-bar');
+    bar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    ['tab-tasks','tab-rewards','tab-earned'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = id === tabId ? '' : 'none';
+    });
+  }
+
+  // ─── Mark done ───
+  function markDone(btn) {
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.textContent = '✓ Done';
+    btn.style.background = 'var(--teal)';
+    showToast('Task marked complete! +Coins 🎉');
+    const card = btn.closest('.task-card');
+    card.style.opacity = '.5';
+  }
+
+  // ─── Passcode ───
+  let pcValue = '';
+  function pcInput(d) {
+    if (pcValue.length >= 4) return;
+    pcValue += d;
+    updateDots();
+  }
+  function pcDelete() {
+    pcValue = pcValue.slice(0, -1);
+    updateDots();
+  }
+  function updateDots() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById('pc-' + i);
+      dot.classList.toggle('filled', i < pcValue.length);
+    }
+  }
+  function pcConfirm() {
+    if (pcValue.length < 4) { showToast('Enter all 4 digits'); return; }
+    if (pcValue === '1234') {
+      showToast('Welcome back, Arjun! 🎉');
+      setTimeout(() => navigateTo('s-child-arjun'), 800);
+    } else {
+      showToast('Wrong passcode. Try 1234');
+      pcValue = '';
+      updateDots();
+      const numpad = document.getElementById('numpad');
+      numpad.style.transform = 'translateX(-6px)';
+      setTimeout(() => { numpad.style.transform = 'translateX(6px)'; }, 80);
+      setTimeout(() => { numpad.style.transform = ''; }, 160);
+    }
+  }
+
+  // ─── Toast ───
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>
